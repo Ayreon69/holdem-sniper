@@ -2,6 +2,8 @@
 
 **Le poker où l'on ne bat pas l'adversaire : on l'abat.**
 
+👉 **Jouer : https://holdem-sniper.onrender.com** (la première ouverture peut prendre jusqu'à une minute, le temps que le serveur gratuit se réveille)
+
 Version web multijoueur du jeu « Sniper Hold'em » de *The Devil's Plan* saison 2 (Netflix, « À l'épreuve du diable » en VF).
 On joue entre amis depuis un navigateur, sur ordinateur ou téléphone, sans compte ni installation. Création de fans, non officielle.
 
