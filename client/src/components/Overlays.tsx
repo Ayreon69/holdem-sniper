@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { handName } from '../../../shared/hands';
 import type { RoomView } from '../../../shared/protocol';
 import { sfx } from '../lib/sound';
-import { cls, plural, secondsLeft } from '../lib/util';
+import { cls, plural } from '../lib/util';
 import { leaveRoom, send } from '../net';
 import { Button, Chips, Crosshair } from './Ui';
 
@@ -47,7 +47,7 @@ export function SnipeFlash({ view }: { view: RoomView }) {
   );
 }
 
-function GiftPanel({ view, now }: { view: RoomView; now: number }) {
+function GiftPanel({ view }: { view: RoomView }) {
   const it = view.interlude!;
   const recipients = view.players.filter((p) => p.status === 'playing');
   const [alloc, setAlloc] = useState<Record<string, number>>({});
@@ -124,7 +124,7 @@ function GiftPanel({ view, now }: { view: RoomView; now: number }) {
           setBusy(false);
         }}
       >
-        Offrir et partir ({secondsLeft(it.endsAt, now)} s)
+        Offrir et partir
       </Button>
     </div>
   );
@@ -155,10 +155,10 @@ export function SurvivalOverlay({ view, now }: { view: RoomView; now: number }) 
             <p className="muted">
               {survivor.name} a atteint {view.plan.target} jetons et les rend à la banque.
             </p>
-            {it.needsGift && mine && <GiftPanel view={view} now={now} />}
+            {it.needsGift && mine && <GiftPanel view={view} />}
             {it.needsGift && !mine && (
               <p className="gift-wait">
-                <span className="spinner" /> {survivor.name} répartit ses {plural(it.surplus, 'jeton')} en trop… ({secondsLeft(it.endsAt, now)} s)
+                <span className="spinner" /> {survivor.name} répartit ses {plural(it.surplus, 'jeton')} en trop…
               </p>
             )}
             {!it.needsGift && view.lastGifts.length > 0 && (

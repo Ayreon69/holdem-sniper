@@ -22,18 +22,6 @@ export function actionText(a: LastAction | null): string | null {
   }
 }
 
-export function TimerRing({ endsAt, total, now }: { endsAt: number; total: number; now: number }) {
-  const frac = Math.max(0, Math.min(1, (endsAt - now) / total));
-  const r = 26;
-  const c = 2 * Math.PI * r;
-  return (
-    <svg className={cls('timer-ring', frac < 0.25 && 'is-low')} viewBox="0 0 60 60" aria-hidden>
-      <circle cx="30" cy="30" r={r} className="track" />
-      <circle cx="30" cy="30" r={r} className="bar" strokeDasharray={c} strokeDashoffset={c * (1 - frac)} />
-    </svg>
-  );
-}
-
 interface Props {
   p: PlayerView;
   view: RoomView;
@@ -70,7 +58,6 @@ export function Seat({ p, view, now, emote, style, compact }: Props) {
       style={style}
     >
       <div className="seat-avatar">
-        {isTurn && h && <TimerRing endsAt={h.turnEndsAt} total={view.settings.turnSeconds * 1000} now={now} />}
         <span className="seat-emoji">{p.avatar}</span>
         {isFirst && (
           <span className="first-badge" title="Parle en premier">

@@ -4,12 +4,10 @@ import { useMemo, useState } from 'react';
 import {
   CAT_LABEL,
   CATEGORIES,
-  evaluate,
   handKey,
   handName,
   keyRange,
   opponentDistribution,
-  sameHand,
   type Category,
   type HandId,
 } from '../../../shared/hands';
@@ -27,7 +25,6 @@ export function SnipePicker({ view, open, onClose }: { view: RoomView; open: boo
   const h = view.hand;
   const hole = me?.hole ?? [];
   const board = h?.board ?? [];
-  const mine = useMemo(() => (hole.length === 2 && board.length === 4 ? evaluate([...hole, ...board]) : null), [hole.join(), board.join()]);
   const dist = useMemo(() => (board.length === 4 ? opponentDistribution(board, hole) : new Map<string, number>()), [board.join(), hole.join()]);
   const taken = useMemo(
     () => new Set((h?.snipes ?? []).filter((s) => s.cat && s.key != null).map((s) => handKey({ cat: s.cat!, key: s.key! }))),
@@ -57,7 +54,6 @@ export function SnipePicker({ view, open, onClose }: { view: RoomView; open: boo
   };
 
   const [lo, hi] = keyRange(cat);
-  const isMine = !!target && !!mine && sameHand(target, mine);
   const impossible = !!target && !dist.has(handKey(target));
 
   return (
@@ -74,12 +70,6 @@ export function SnipePicker({ view, open, onClose }: { view: RoomView; open: boo
           <span className="demo-label">Ta main</span>
           <CardRow values={hole} size="sm" />
         </div>
-        {mine && (
-          <div className="snipe-mine">
-            <span className="demo-label">Ta combinaison</span>
-            <b>{handName(mine)}</b>
-          </div>
-        )}
       </div>
 
       <div className="cat-grid" role="radiogroup" aria-label="Combinaison">
@@ -103,20 +93,18 @@ export function SnipePicker({ view, open, onClose }: { view: RoomView; open: boo
           const outOfRange = k < lo || k > hi;
           const possible = dist.has(handKey(id));
           const isTaken = taken.has(handKey(id));
-          const own = !!mine && sameHand(id, mine);
           const pct = Math.round(chance(id) * 100);
           return (
             <button
               key={k}
               type="button"
               disabled={outOfRange || isTaken}
-              className={cls('key-btn', key === k && 'is-on', !possible && 'is-impossible', isTaken && 'is-taken', own && 'is-own')}
+              className={cls('key-btn', key === k && 'is-on', !possible && 'is-impossible', isTaken && 'is-taken')}
               onClick={() => setKey(k)}
-              title={isTaken ? 'Déjà visée' : !possible ? 'Impossible pour un adversaire' : own ? 'Ta propre main' : undefined}
+              title={isTaken ? 'Déjà visée' : !possible ? 'Impossible pour un adversaire' : undefined}
             >
               <span className="key-n">{k}</span>
               {probs && possible && !outOfRange && <span className="key-p">{pct < 1 ? '<1' : pct}%</span>}
-              {own && <span className="key-own">toi</span>}
             </button>
           );
         })}
@@ -126,9 +114,8 @@ export function SnipePicker({ view, open, onClose }: { view: RoomView; open: boo
         {target ? (
           <>
             <span className="snipe-target">🎯 « {handName(target)} »</span>
-            {isMine && <span className="warn">⚠ C'est ta propre main : tu l'abattrais aussi (utile pour forcer une égalité).</span>}
-            {!isMine && impossible && <span className="warn">Aucun adversaire ne peut avoir cette main au vu des cartes.</span>}
-            {!isMine && !impossible && probs && <span className="muted small">≈ {Math.round(chance(target) * 100)} % qu'au moins un adversaire l'ait (sans tenir compte des mises).</span>}
+            {impossible && <span className="warn">Aucun adversaire ne peut avoir cette main au vu des cartes.</span>}
+            {!impossible && probs && <span className="muted small">≈ {Math.round(chance(target) * 100)} % qu'au moins un adversaire l'ait (sans tenir compte des mises).</span>}
           </>
         ) : (
           <span className="muted">Choisis une combinaison puis un chiffre.</span>

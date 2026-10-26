@@ -13,11 +13,9 @@ export const CHIP_PRESETS: Record<ChipPreset, { label: string; base: number; hin
   standard: { label: 'Classique', base: 40, hint: '≈ 30 min' },
   show: { label: "Comme dans l'émission", base: 60, hint: '45 min et +' },
 };
-export const TURN_CHOICES = [30, 45, 60, 90] as const;
 
 export interface Settings {
   preset: ChipPreset;
-  turnSeconds: number;
 }
 
 /**

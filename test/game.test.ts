@@ -121,16 +121,18 @@ describe('déroulé d’une manche', () => {
     expect(h.result.gains).toEqual({ [a]: 5 });
   });
 
-  it('passe un joueur absent en pilote automatique après deux chronos expirés, puis lui rend la main', () => {
+  it('ne limite pas le temps de réflexion d’un joueur connecté', () => {
     const { room, host } = setup(1);
     host.sockets.add('s1');
     host.connected = true;
     room.start(host.id);
     room.commit();
+    const h = (room as unknown as Internals).hand;
     let guard = 0;
-    while (host.idleStrikes < 2 && guard++ < 200) vi.advanceTimersByTime(5_000);
-    expect(room.isAuto(host)).toBe(true);
-    room.markActive(host.id);
+    while (h.turnId !== host.id && guard++ < 50) vi.advanceTimersByTime(3_000);
+    expect(h.turnId).toBe(host.id);
+    vi.advanceTimersByTime(60 * 60_000);
+    expect(h.turnId).toBe(host.id);
     expect(room.isAuto(host)).toBe(false);
   });
 

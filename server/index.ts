@@ -169,23 +169,12 @@ io.on('connection', (socket: Socket) => {
   on('game:start', (room, playerId) => room.start(playerId));
   on('game:restart', (room, playerId) => room.restart(playerId));
   on('game:end', (room, playerId) => room.endEarly(playerId));
-  on('game:action', (room, playerId, payload) => {
-    room.markActive(playerId);
-    return room.act(playerId, { type: payload.type as 'check' | 'call' | 'raise' | 'fold', amount: Number(payload.amount) });
-  });
-  on('game:snipe', (room, playerId, payload) => {
-    room.markActive(playerId);
-    return room.snipe(playerId, payload);
-  });
-  on('game:gift', (room, playerId, payload) => {
-    room.markActive(playerId);
-    return room.gift(playerId, payload.allocation);
-  });
-  on('game:next', (room, playerId) => {
-    room.markActive(playerId);
-    return room.readyNext(playerId);
-  });
-  on('game:back', (room, playerId) => room.markActive(playerId));
+  on('game:action', (room, playerId, payload) =>
+    room.act(playerId, { type: payload.type as 'check' | 'call' | 'raise' | 'fold', amount: Number(payload.amount) }),
+  );
+  on('game:snipe', (room, playerId, payload) => room.snipe(playerId, payload));
+  on('game:gift', (room, playerId, payload) => room.gift(playerId, payload.allocation));
+  on('game:next', (room, playerId) => room.readyNext(playerId));
   on('chat', (room, playerId, payload) => {
     const text = typeof payload.text === 'string' ? payload.text.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 160) : '';
     if (!text) return undefined;

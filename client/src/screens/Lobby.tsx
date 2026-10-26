@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Bot, Check, Copy, Crown, LogOut, Play, QrCode, Share2, UserX } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
-import { CHIP_PRESETS, MAX_PLAYERS, MIN_PLAYERS, TURN_CHOICES, chipPlan, type ChipPreset, type RoomView } from '../../../shared/protocol';
+import { CHIP_PRESETS, MAX_PLAYERS, MIN_PLAYERS, chipPlan, type ChipPreset, type RoomView } from '../../../shared/protocol';
 import { Button, Chips, Logo, Modal, Pill, Segmented } from '../components/Ui';
 import { cls, shareUrl } from '../lib/util';
 import { leaveRoom, send } from '../net';
@@ -131,13 +131,6 @@ export function Lobby({ view }: { view: RoomView }) {
               const plan = chipPlan(k, Math.max(2, seated.length));
               return { value: k, label: CHIP_PRESETS[k].label, sub: `${plan.start} → ${plan.target}` };
             })}
-          />
-          <label className="field-label">Temps pour jouer</label>
-          <Segmented<number>
-            value={view.settings.turnSeconds}
-            disabled={!isHost}
-            onChange={(turnSeconds) => void send('room:settings', { turnSeconds })}
-            options={TURN_CHOICES.map((t) => ({ value: t, label: `${t} s` }))}
           />
           <div className="plan-box">
             <div>

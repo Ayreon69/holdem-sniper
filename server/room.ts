@@ -15,7 +15,6 @@ import {
   CHIP_PRESETS,
   MAX_PLAYERS,
   MIN_PLAYERS,
-  TURN_CHOICES,
   chipPlan,
   type ActionType,
   type ChipPreset,
@@ -39,7 +38,6 @@ const BOT_NAMES = ['Lucifer', 'Lilith', 'Méphisto', 'Asmodée', 'Belzébuth', '
 const MAX_MEMBERS = 16;
 /** Délai laissé à un joueur déconnecté avant que le pilote automatique ne prenne le relais. */
 const GRACE_MS = 20_000;
-const GIFT_MS = 45_000;
 /** Mode accéléré pour les tests locaux (HS_FAST=1) : bots et chronos quasi instantanés. */
 const FAST = process.env.HS_FAST === '1';
 const SHOWDOWN_MS = FAST ? 1_200 : 12_000;
@@ -57,14 +55,10 @@ export interface Player {
   connected: boolean;
   disconnectedAt: number;
   left: boolean;
-  /** Chronos expirés d'affilée : à 2, le pilote automatique prend le relais. */
-  idleStrikes: number;
   status: PlayerStatus;
   chips: number;
   survivedRank: number | null;
 }
-
-const IDLE_LIMIT = 2;
 
 interface Hand {
   number: number;
@@ -123,7 +117,7 @@ export class Room {
   readonly code: string;
   hostId = '';
   phase: 'lobby' | 'playing' | 'finished' = 'lobby';
-  settings: Settings = { preset: 'standard', turnSeconds: 45 };
+  settings: Settings = { preset: 'standard' };
   players: Player[] = [];
   plan = { start: 0, target: 0 };
   hand: Hand | null = null;
@@ -190,7 +184,6 @@ export class Room {
       connected: isBot,
       disconnectedAt: 0,
       left: false,
-      idleStrikes: 0,
       status,
       chips: 0,
       survivedRank: null,
@@ -277,15 +270,7 @@ export class Room {
   }
 
   isAuto(p: Player): boolean {
-    return p.isBot || p.left || p.idleStrikes >= IDLE_LIMIT || (!p.connected && Date.now() - p.disconnectedAt >= GRACE_MS);
-  }
-
-  /** Un joueur a agi lui-même : il reprend la main s'il était passé en pilote automatique. */
-  markActive(id: string): void {
-    const p = this.get(id);
-    if (!p || p.isBot) return;
-    if (p.idleStrikes >= IDLE_LIMIT && p.status === 'playing') this.addLog('system', `${p.name} reprend la main.`, p.id);
-    p.idleStrikes = 0;
+    return p.isBot || p.left || (!p.connected && Date.now() - p.disconnectedAt >= GRACE_MS);
   }
 
   updateSettings(by: string, payload: Record<string, unknown>): string | undefined {
@@ -293,8 +278,6 @@ export class Room {
     if (this.phase !== 'lobby') return 'Les réglages se changent dans le salon.';
     const preset = payload.preset;
     if (typeof preset === 'string' && preset in CHIP_PRESETS) this.settings.preset = preset as ChipPreset;
-    const turn = Number(payload.turnSeconds);
-    if ((TURN_CHOICES as readonly number[]).includes(turn)) this.settings.turnSeconds = turn;
     return undefined;
   }
 
@@ -357,7 +340,6 @@ export class Room {
       if (p.status === 'lobby') seats++;
       p.chips = 0;
       p.survivedRank = null;
-      p.idleStrikes = 0;
     }
     this.phase = 'lobby';
     this.hand = null;
@@ -480,7 +462,8 @@ export class Room {
   private setTurn(h: Hand, id: string, botMin: number, botMax: number): void {
     const now = Date.now();
     h.turnId = id;
-    h.turnEndsAt = now + (FAST ? 900 : this.settings.turnSeconds * 1000);
+    // Pas de chrono en jeu normal (0) ; le mode accéléré des tests en garde un.
+    h.turnEndsAt = FAST ? now + 900 : 0;
     h.botActAt = FAST ? now + 40 : now + botMin + Math.random() * (botMax - botMin);
   }
 
@@ -724,7 +707,7 @@ export class Room {
       playerId: p.id,
       surplus,
       needsGift,
-      endsAt: now + (needsGift ? GIFT_MS : SURVIVE_MS),
+      endsAt: needsGift ? 0 : now + SURVIVE_MS,
       botActAt: now + 2200 + Math.random() * 1500,
       rank: p.survivedRank,
     };
@@ -839,11 +822,12 @@ export class Room {
     }, Math.max(0, Math.min(ms, 2_147_000_000)));
   }
 
-  /** Quand agir pour un joueur : bot → délai naturel, déconnecté → fin du délai de grâce, sinon → fin du chrono. */
+  /** Quand agir pour un joueur : bot → délai naturel, déconnecté → fin du délai de grâce, sinon jamais (pas de chrono). */
   private dueAt(p: Player, deadline: number, botAt: number): number {
+    const limit = deadline > 0 ? deadline : Infinity;
     if (this.isAuto(p)) return p.isBot ? botAt : Math.min(botAt, Date.now() + 700);
-    if (!p.connected) return Math.min(deadline, p.disconnectedAt + GRACE_MS);
-    return deadline;
+    if (!p.connected) return Math.min(limit, p.disconnectedAt + GRACE_MS);
+    return limit;
   }
 
   private reschedule(): void {
@@ -854,10 +838,13 @@ export class Room {
     if (it) {
       if (it.needsGift) {
         const giver = this.get(it.playerId)!;
-        this.at(this.dueAt(giver, it.endsAt, it.botActAt) - now, () => {
-          if (this.interlude !== it || !it.needsGift) return;
-          if (this.isAuto(giver) || Date.now() >= it.endsAt - 50) this.autoGift(it);
-        });
+        const due = this.dueAt(giver, it.endsAt, it.botActAt);
+        if (Number.isFinite(due)) {
+          this.at(due - now, () => {
+            if (this.interlude !== it || !it.needsGift) return;
+            if (this.isAuto(giver)) this.autoGift(it);
+          });
+        }
       } else {
         this.at(it.endsAt - now, () => {
           if (this.interlude === it) this.finishInterlude();
@@ -878,28 +865,13 @@ export class Room {
     if (!p) return;
     const turnId = h.turnId;
     const street = h.street;
-    this.at(this.dueAt(p, h.turnEndsAt, h.botActAt) - now, () => {
+    const due = this.dueAt(p, h.turnEndsAt, h.botActAt);
+    if (!Number.isFinite(due)) return;
+    this.at(due - now, () => {
       if (this.hand !== h || h.turnId !== turnId || h.street !== street) return;
-      if (this.isAuto(p)) this.autoPlay(h, p);
-      else if (Date.now() >= h.turnEndsAt - 50) this.timeoutPlay(h, p);
+      // Hors mode accéléré, seul un joueur parti ou déconnecté est relayé : jamais de chrono sur un joueur présent.
+      if (this.isAuto(p) || FAST) this.autoPlay(h, p);
     });
-  }
-
-  /** Temps écoulé pour un humain présent : choix le plus prudent. */
-  private timeoutPlay(h: Hand, p: Player): void {
-    if (FAST) {
-      this.autoPlay(h, p);
-      return;
-    }
-    p.idleStrikes++;
-    if (p.idleStrikes === IDLE_LIMIT) this.addLog('system', `${p.name} ne répond plus : le pilote automatique joue à sa place.`, p.id);
-    if (h.street === 'snipe') {
-      this.snipe(p.id, { pass: true });
-      return;
-    }
-    const opt = this.options(h, p.id);
-    this.addLog('system', `⏱ Temps écoulé pour ${p.name}.`, p.id);
-    this.act(p.id, { type: opt.canCheck ? 'check' : 'fold' });
   }
 
   private autoPlay(h: Hand, p: Player): void {

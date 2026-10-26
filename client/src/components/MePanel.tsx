@@ -1,7 +1,6 @@
-// Mon espace : mes cartes, ma combinaison, mes jetons et les actions possibles selon la phase.
+// Mon espace : mes cartes, mes jetons et les actions possibles selon la phase.
 import { Crosshair as CrosshairIcon, Minus, Plus } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { evaluate, handName, sameHand } from '../../../shared/hands';
+import { useEffect, useState } from 'react';
 import type { RoomView } from '../../../shared/protocol';
 import { cls, secondsLeft } from '../lib/util';
 import { send } from '../net';
@@ -58,10 +57,6 @@ export function MePanel({ view, now }: { view: RoomView; now: number }) {
   }, [myTurn, h?.street]);
 
   const hole = me?.hole ?? null;
-  const board = h?.board ?? [];
-  const myHand = useMemo(() => (hole && board.length >= 2 ? evaluate([...hole, ...board]) : null), [hole?.join(), board.join()]);
-  const snipedOnMe =
-    !!myHand && board.length === 4 && !!h && h.snipes.some((s) => s.cat && s.key != null && sameHand({ cat: s.cat, key: s.key }, myHand)) && !me?.folded;
 
   if (!me) return null;
   const target = view.plan.target;
@@ -142,12 +137,7 @@ export function MePanel({ view, now }: { view: RoomView; now: number }) {
               </Button>
             )}
           </div>
-          <div className="turn-bar">
-            <div className="turn-fill" style={{ width: `${Math.max(0, Math.min(100, ((h.turnEndsAt - now) / (view.settings.turnSeconds * 1000)) * 100))}%` }} />
-          </div>
-          <span className="muted small">
-            À toi ! {secondsLeft(h.turnEndsAt, now)} s · plafond de mise {h.cap}
-          </span>
+          <span className="muted small">À toi de jouer · plafond de mise {h.cap}</span>
         </div>
       );
     } else if (myTurn && h.street === 'snipe') {
@@ -161,10 +151,7 @@ export function MePanel({ view, now }: { view: RoomView; now: number }) {
               Viser une main
             </Button>
           </div>
-          <div className="turn-bar is-red">
-            <div className="turn-fill" style={{ width: `${Math.max(0, Math.min(100, ((h.turnEndsAt - now) / (view.settings.turnSeconds * 1000)) * 100))}%` }} />
-          </div>
-          <span className="muted small">À toi de tirer ! {secondsLeft(h.turnEndsAt, now)} s</span>
+          <span className="muted small">À toi de tirer !</span>
         </div>
       );
     } else if (h.street === 'result' && me.status !== 'playing') {
@@ -182,7 +169,7 @@ export function MePanel({ view, now }: { view: RoomView; now: number }) {
         <div className="actions waiting-turn">
           <span className="spinner" />
           <span>
-            {h.street === 'snipe' ? 'Tir de' : 'Au tour de'} <b>{turnPlayer.name}</b>… {secondsLeft(h.turnEndsAt, now)} s
+            {h.street === 'snipe' ? 'Tir de' : 'Au tour de'} <b>{turnPlayer.name}</b>…
           </span>
         </div>
       );
@@ -204,13 +191,13 @@ export function MePanel({ view, now }: { view: RoomView; now: number }) {
   }
 
   return (
-    <section className={cls('me-panel', myTurn && 'is-turn', snipedOnMe && 'is-doomed')}>
+    <section className={cls('me-panel', myTurn && 'is-turn')}>
       <div className="me-hand">
         <div className="me-cards">
           {hole ? (
             <>
-              <Card value={hole[0]} size="lg" dim={me.folded} highlight={hole[0] === hole[1]} />
-              <Card value={hole[1]} size="lg" dim={me.folded} highlight={hole[0] === hole[1]} />
+              <Card value={hole[0]} size="lg" dim={me.folded} />
+              <Card value={hole[1]} size="lg" dim={me.folded} />
             </>
           ) : (
             <>
@@ -241,13 +228,6 @@ export function MePanel({ view, now }: { view: RoomView; now: number }) {
           ) : (
             <span className="status-tag">Spectateur</span>
           )}
-          {myHand && hole && (
-            <div className={cls('my-combo', snipedOnMe && 'is-doomed')}>
-              {board.length === 4 ? 'Ta main' : 'Pour l’instant'} : <b>{handName(myHand)}</b>
-              {hole[0] === hole[1] && <span className="pp-tag" title="Paire servie : très difficile à deviner">paire servie</span>}
-            </div>
-          )}
-          {snipedOnMe && h?.street !== 'result' && <div className="doom-note">💀 Ta main a été visée : elle sera abattue.</div>}
           {outcome && <div className={cls('my-outcome', `is-${outcome.tone}`)}>{outcome.text}</div>}
           {(h?.street === 'bet1' || h?.street === 'bet2') && (me.streetBet > 0 || myAct) && (
             <div className="me-bet">
@@ -262,16 +242,7 @@ export function MePanel({ view, now }: { view: RoomView; now: number }) {
         </div>
       </div>
       <div className="me-actions">
-        {me.autopilot && me.connected ? (
-          <div className="autopilot">
-            <span>🤖 Le pilote automatique joue à ta place (temps écoulé deux fois).</span>
-            <Button variant="gold" onClick={() => void send('game:back')}>
-              Je suis là !
-            </Button>
-          </div>
-        ) : (
-          hint && <p className="hint">{hint}</p>
-        )}
+        {hint && <p className="hint">{hint}</p>}
         {actions}
       </div>
       <SnipePicker view={view} open={pickerOpen} onClose={() => setPickerOpen(false)} />
