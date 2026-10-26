@@ -1,7 +1,7 @@
 // Mon espace : mes cartes, mes jetons et les actions possibles selon la phase.
 import { Crosshair as CrosshairIcon, Minus, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { RoomView } from '../../../shared/protocol';
+import { isBetStreet, type RoomView } from '../../../shared/protocol';
 import { cls, secondsLeft } from '../lib/util';
 import { send } from '../net';
 import { useStore } from '../store';
@@ -22,12 +22,18 @@ function hintFor(view: RoomView, myTurn: boolean): string | null {
   switch (h.street) {
     case 'bet1':
       return myTurn
-        ? 'Tu vois 2 cartes communes sur 4. Mise si ta main est prometteuse… sans trop la dévoiler.'
-        : 'Premier tour de mise : observe qui mise fort, c’est un indice pour ton tir.';
+        ? 'Aucune carte commune encore : tu ne connais que tes 2 cartes. Mise prudemment ou couche-toi.'
+        : 'Premier tour de mise, avant toute carte commune : observe qui mise fort.';
     case 'bet2':
       return myTurn
+        ? 'Tu vois 2 cartes communes sur 4. Mise si ta main est prometteuse… sans trop la dévoiler.'
+        : 'Deux cartes communes sont sorties. Qui a l’air sûr de lui ?';
+    case 'bet3':
+      return myTurn ? 'Une 3e carte commune vient d’apparaître. Ta main se précise.' : 'Troisième tour de mise : les mains se dessinent.';
+    case 'bet4':
+      return myTurn
         ? 'Toutes les cartes communes sont là. Une grosse main évidente risque d’être visée !'
-        : 'Second tour de mise. Qui a l’air sûr de lui ?';
+        : 'Dernier tour de mise avant les tirs. Qui a l’air sûr de lui ?';
     case 'snipe':
       return myTurn
         ? 'À toi de tirer : devine la combinaison exacte d’un adversaire. Touché = sa main devient la pire.'
@@ -84,7 +90,7 @@ export function MePanel({ view, now }: { view: RoomView; now: number }) {
 
   let actions: React.ReactNode = null;
   if (view.phase === 'playing' && h && !view.interlude) {
-    if (myTurn && opt && (h.street === 'bet1' || h.street === 'bet2')) {
+    if (myTurn && opt && isBetStreet(h.street)) {
       const wasBet = h.currentBet === 0;
       actions = (
         <div className="actions">
@@ -177,7 +183,7 @@ export function MePanel({ view, now }: { view: RoomView; now: number }) {
   }
 
   const playing = me.status === 'playing';
-  const myAct = h && (h.street === 'bet1' || h.street === 'bet2') ? actionText(me.lastAction) : null;
+  const myAct = h && isBetStreet(h.street) ? actionText(me.lastAction) : null;
   const result = h?.street === 'result' ? h.result : null;
   let outcome: { text: string; tone: 'win' | 'lose' | 'split' } | null = null;
   if (result && me.inHand) {
@@ -229,7 +235,7 @@ export function MePanel({ view, now }: { view: RoomView; now: number }) {
             <span className="status-tag">Spectateur</span>
           )}
           {outcome && <div className={cls('my-outcome', `is-${outcome.tone}`)}>{outcome.text}</div>}
-          {(h?.street === 'bet1' || h?.street === 'bet2') && (me.streetBet > 0 || myAct) && (
+          {!!h && isBetStreet(h.street) && (me.streetBet > 0 || myAct) && (
             <div className="me-bet">
               {me.streetBet > 0 && (
                 <>

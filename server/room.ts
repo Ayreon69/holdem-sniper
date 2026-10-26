@@ -12,10 +12,13 @@ import {
 } from '../shared/hands';
 import {
   AVATARS,
+  BET_STREETS,
+  BOARD_REVEALED,
   CHIP_PRESETS,
   MAX_PLAYERS,
   MIN_PLAYERS,
   chipPlan,
+  isBetStreet,
   type ActionType,
   type ChipPreset,
   type FinalEntry,
@@ -376,7 +379,7 @@ export class Room {
       number: ++this.handCount,
       order,
       board: [],
-      revealed: 2,
+      revealed: BOARD_REVEALED[0],
       hole: new Map(),
       startStack: new Map(),
       committed: new Map(),
@@ -407,7 +410,7 @@ export class Room {
     this.hand = h;
     this.interlude = null;
     this.lastGifts = [];
-    this.addLog('hand', `Manche ${h.number} — ${this.get(order[0])!.name} parle en premier. Cartes communes : ${h.board[0]} · ${h.board[1]}.`);
+    this.addLog('hand', `Manche ${h.number} — ${this.get(order[0])!.name} parle en premier. Aucune carte commune pour l'instant.`);
     this.advanceBetting(h, 0);
   }
 
@@ -469,18 +472,21 @@ export class Room {
 
   private endStreet(h: Hand): void {
     h.turnId = null;
-    if (h.street === 'bet1') {
-      h.street = 'bet2';
-      h.revealed = 4;
+    const step = BET_STREETS.indexOf(h.street as (typeof BET_STREETS)[number]);
+    if (step >= 0 && step < BET_STREETS.length - 1) {
+      const before = h.revealed;
+      h.street = BET_STREETS[step + 1];
+      h.revealed = BOARD_REVEALED[step + 1];
       h.currentBet = 0;
       h.acted.clear();
       for (const id of h.order) {
         h.streetBet.set(id, 0);
         if (h.lastAction.get(id)?.type !== 'fold') h.lastAction.delete(id);
       }
-      this.addLog('hand', `Deux nouvelles cartes communes : ${h.board[2]} · ${h.board[3]}. Tableau : ${h.board.join(' · ')}.`);
+      const fresh = h.board.slice(before, h.revealed);
+      this.addLog('hand', `${fresh.length > 1 ? 'Nouvelles cartes communes' : 'Nouvelle carte commune'} : ${fresh.join(' · ')}. Tableau : ${h.board.slice(0, h.revealed).join(' · ')}.`);
       this.advanceBetting(h, 0);
-    } else if (h.street === 'bet2') {
+    } else if (step >= 0) {
       h.street = 'snipe';
       for (const id of h.order) if (h.lastAction.get(id)?.type !== 'fold') h.lastAction.delete(id);
       this.addLog('hand', 'Phase de tir : chacun peut viser une combinaison.');
@@ -497,7 +503,7 @@ export class Room {
 
   act(id: string, action: { type: ActionType; amount?: number }): string | undefined {
     const h = this.hand;
-    if (this.phase !== 'playing' || !h || (h.street !== 'bet1' && h.street !== 'bet2')) return "Ce n'est pas le moment de miser.";
+    if (this.phase !== 'playing' || !h || !isBetStreet(h.street)) return "Ce n'est pas le moment de miser.";
     if (h.turnId !== id) return "Ce n'est pas ton tour.";
     if (this.interlude) return "Ce n'est pas le moment de miser.";
     const p = this.get(id)!;
@@ -950,7 +956,7 @@ export class Room {
             result: h.result,
             resultEndsAt: h.resultEndsAt,
             readyIds: [...h.ready],
-            options: h.turnId === viewerId && (h.street === 'bet1' || h.street === 'bet2') ? this.options(h, viewerId) : null,
+            options: h.turnId === viewerId && isBetStreet(h.street) ? this.options(h, viewerId) : null,
           }
         : null,
       interlude: this.interlude

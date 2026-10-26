@@ -2702,3 +2702,26 @@ b {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Notification d'action au centre de la table */
+.action-toast-slot {
+  min-height: 26px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.action-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px 3px 6px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  background: rgba(10, 12, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e9ecf5;
+  backdrop-filter: blur(4px);
+}
+.action-toast .avatar { font-size: 1rem; width: auto; height: auto; background: none; }
+.action-toast.is-raise { border-color: rgba(244, 194, 91, 0.7); }
+.action-toast.is-fold { opacity: 0.8; border-color: rgba(255, 51, 85, 0.5); }

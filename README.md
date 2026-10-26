@@ -10,7 +10,7 @@ On joue entre amis depuis un navigateur, sur ordinateur ou téléphone, sans com
 ## Règles en bref
 
 - **40 cartes** numérotées de 1 à 10 (4 exemplaires de chaque), sans couleurs.
-- Chaque manche : mise de base de 1 jeton, **2 cartes privées**, **2 cartes communes** → 1er tour de mise, **2 cartes communes de plus** → 2e tour de mise.
+- Chaque manche : mise de base de 1 jeton, **2 cartes privées**, un tour de mise sans carte commune, puis **2 cartes communes** → 2e tour, **1 carte** → 3e tour, **1 dernière carte** → 4e tour.
 - **Plafond** : personne ne peut engager plus que le tapis du joueur le plus pauvre encore dans la manche.
 - **Phase de tir** : dans l'ordre de parole, chacun peut annoncer une combinaison exacte (« Suite au 9 », « Full aux 7 »…). Toute main qui correspond est **abattue** et passe au dernier rang, y compris celle du tireur.
 - La meilleure main restante remporte le pot. Égalité : chiffre de la combinaison, puis plus haute carte privée, puis l'autre. Si tout est abattu, le pot est partagé.
