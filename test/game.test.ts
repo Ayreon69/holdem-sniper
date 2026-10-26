@@ -24,7 +24,7 @@ function rig(room: Room, holes: number[][], board: number[]) {
 function checkAround(room: Room) {
   const h = (room as unknown as Internals).hand;
   let guard = 0;
-  while (h.street.startsWith('bet') && guard++ < 50) {
+  while ((h.street === 'bet1' || h.street === 'bet2') && guard++ < 50) {
     expect(room.act(h.turnId, { type: 'check' })).toBeUndefined();
   }
   expect(h.street).toBe('snipe');
@@ -90,7 +90,7 @@ describe('déroulé d’une manche', () => {
     expect(room.act(a, { type: 'raise', amount: 1 })).toBeUndefined();
     expect(room.act(b, { type: 'call' })).toBeUndefined();
     expect(room.act(c, { type: 'fold' })).toBeUndefined();
-    while (h.street.startsWith('bet')) room.act(h.turnId, { type: 'check' });
+    while (h.street === 'bet2') room.act(h.turnId, { type: 'check' });
     room.snipe(a, { pass: true });
     room.snipe(b, { pass: true });
     // Carré de 9 partout, mêmes cartes privées : pot de 5 → 3 pour le premier à parler, 2 pour l'autre.

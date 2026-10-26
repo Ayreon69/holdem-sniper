@@ -32,12 +32,7 @@ export function chipPlan(preset: ChipPreset, players: number): { start: number; 
 }
 
 export type PlayerStatus = 'lobby' | 'playing' | 'survived' | 'eliminated' | 'spectator';
-export type Street = 'bet1' | 'bet2' | 'bet3' | 'bet4' | 'snipe' | 'result';
-
-/** Tours de mise dans l'ordre, et nombre de cartes communes visibles à chacun (0, 2, 3 puis 4). */
-export const BET_STREETS = ['bet1', 'bet2', 'bet3', 'bet4'] as const;
-export const BOARD_REVEALED = [0, 2, 3, 4] as const;
-export const isBetStreet = (s: Street): boolean => (BET_STREETS as readonly string[]).includes(s);
+export type Street = 'bet1' | 'bet2' | 'snipe' | 'result';
 export type ActionType = 'check' | 'call' | 'raise' | 'fold';
 
 export interface LastAction {

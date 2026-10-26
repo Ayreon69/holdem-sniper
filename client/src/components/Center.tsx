@@ -2,7 +2,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { handName } from '../../../shared/hands';
-import { isBetStreet, type RoomView } from '../../../shared/protocol';
+import type { RoomView } from '../../../shared/protocol';
 import { cls, plural } from '../lib/util';
 import { Card } from './Card';
 import { actionText } from './Seat';
@@ -11,8 +11,6 @@ import { Chips } from './Ui';
 export const STREET_LABEL: Record<string, string> = {
   bet1: '1er tour de mise',
   bet2: '2e tour de mise',
-  bet3: '3e tour de mise',
-  bet4: '4e tour de mise',
   snipe: 'Phase de tir',
   result: 'Abattage',
 };
@@ -69,7 +67,7 @@ export function Center({ view }: { view: RoomView }) {
         <span className="pot">
           Pot <Chips n={h.pot} />
         </span>
-        {isBetStreet(h.street) && (
+        {(h.street === 'bet1' || h.street === 'bet2') && (
           <span className="cap" title="Personne ne peut engager plus que ce plafond sur cette manche">
             Plafond {h.cap}
           </span>

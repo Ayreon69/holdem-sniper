@@ -2,7 +2,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bot, WifiOff } from 'lucide-react';
 import { handName } from '../../../shared/hands';
-import { isBetStreet, type LastAction, type PlayerView, type RoomView } from '../../../shared/protocol';
+import type { LastAction, PlayerView, RoomView } from '../../../shared/protocol';
 import { cls } from '../lib/util';
 import type { Emote } from '../store';
 import { Card } from './Card';
@@ -42,7 +42,7 @@ export function Seat({ p, view, now, emote, style, compact }: Props) {
   const showSnipe = !!snipe && (h?.street === 'snipe' || h?.street === 'result');
   const isFirst = h?.firstId === p.id && view.phase === 'playing';
   const playing = p.status === 'playing';
-  const act = h && (isBetStreet(h.street) || p.folded) ? actionText(p.lastAction) : null;
+  const act = h && (h.street === 'bet1' || h.street === 'bet2' || p.folded) ? actionText(p.lastAction) : null;
 
   return (
     <div
@@ -92,7 +92,7 @@ export function Seat({ p, view, now, emote, style, compact }: Props) {
         <div className="seat-name" title={p.name}>
           {p.name}
         </div>
-        {!!h && isBetStreet(h.street) && p.streetBet > 0 && (
+        {(h?.street === 'bet1' || h?.street === 'bet2') && p.streetBet > 0 && (
           <span className="seat-bet" title="Mise sur ce tour">
             <Chips n={p.streetBet} />
           </span>

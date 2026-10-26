@@ -148,7 +148,7 @@ export function Home() {
           <span className="how-n">1</span>
           <div>
             <b>Mise</b>
-            <p>2 cartes privées, 4 communes dévoilées 2 + 1 + 1, 4 tours de mise. Cartes de 1 à 10, sans couleurs.</p>
+            <p>2 cartes privées, 4 communes, 2 tours de mise. Cartes de 1 à 10, sans couleurs.</p>
           </div>
         </div>
         <div className="how-item is-red">

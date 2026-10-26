@@ -76,7 +76,7 @@ function RulesContent({ tab }: { tab: Tab }) {
             <div className="rule-card">
               <Coins />
               <h4>Mise comme au poker</h4>
-              <p>2 cartes privées, 4 cartes communes dévoilées peu à peu, 4 tours de mise. Meilleure combinaison de 6 cartes.</p>
+              <p>2 cartes privées, 4 cartes communes, 2 tours de mise. Meilleure combinaison de 6 cartes.</p>
             </div>
             <div className="rule-card is-red">
               <CrosshairIcon />
@@ -106,12 +106,12 @@ function RulesContent({ tab }: { tab: Tab }) {
           <Step n={1} title="Mise de base et distribution">
             Chaque joueur mise <b>1 jeton</b> et reçoit <b>2 cartes privées</b>, que lui seul voit.
           </Step>
-          <Step n={2} title="Aucune carte commune → 1er tour de mise">
+          <Step n={2} title="2 cartes communes → 1er tour de mise">
             Le premier joueur parle, puis on tourne dans le sens horaire. Tu peux <b>checker</b> (ne rien ajouter), <b>miser / relancer</b>,{' '}
             <b>suivre</b> la mise en cours ou <b>te coucher</b> (tu abandonnes ce que tu as déjà misé).
           </Step>
-          <Step n={3} title="2 cartes, puis 1, puis 1 → un tour de mise à chaque fois">
-            On dévoile <b>2 cartes communes</b>, nouveau tour de mise ; puis <b>1 carte</b> de plus, nouveau tour ; puis la <b>dernière</b>, dernier tour. Un tour s'arrête quand tous ceux qui restent ont misé autant.
+          <Step n={3} title="2 cartes communes de plus → 2e tour de mise">
+            Même principe. Un tour s'arrête quand tous ceux qui restent ont misé autant.
           </Step>
           <Step n={4} title="Phase de tir">
             Dans l'ordre de parole, chacun peut <b>viser une combinaison</b> précise (ou ne pas tirer). Les tirs sont publics.
