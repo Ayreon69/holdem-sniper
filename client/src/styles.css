@@ -2725,3 +2725,25 @@ b {
 .action-toast .avatar { font-size: 1rem; width: auto; height: auto; background: none; }
 .action-toast.is-raise { border-color: rgba(244, 194, 91, 0.7); }
 .action-toast.is-fold { opacity: 0.8; border-color: rgba(255, 51, 85, 0.5); }
+
+/* Lien vers la page qui liste tous les jeux : une ligne de l'accueil, jamais par-dessus le titre */
+.all-games {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  min-height: 40px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  margin: -30px 0 -16px;
+}
+.all-games:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

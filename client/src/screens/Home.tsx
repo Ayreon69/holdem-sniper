@@ -1,6 +1,6 @@
 // Accueil : pseudo + avatar, créer / rejoindre une table, partie d'entraînement, règles.
 import { motion } from 'framer-motion';
-import { Bot, BookOpen, LogIn, Plus } from 'lucide-react';
+import { Bot, BookOpen, House, LogIn, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AVATARS } from '../../../shared/protocol';
 import { Card } from '../components/Card';
@@ -40,6 +40,9 @@ export function Home() {
 
   return (
     <div className="home">
+      <a className="all-games" href="https://akhis-games.onrender.com">
+        <House size={16} aria-hidden /> Tous les jeux
+      </a>
       <div className="home-bg" aria-hidden>
         <Crosshair className="home-bg-cross" />
       </div>
